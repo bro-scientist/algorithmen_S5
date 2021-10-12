@@ -23,7 +23,7 @@ int main()
         cout << "-Primzahlen bis " << n << "-" << endl;
         for(int i = 0; i < n; i++)
         {
-            cout << numbers[i] << endl;
+            if(numbers[i]) cout << numbers[i] << endl;
         }
     }
 
