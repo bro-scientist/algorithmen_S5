@@ -33,7 +33,7 @@ int main()
 
     if(true)
     {
-        cout << "pi:     " << pi(1024) << endl;
+        cout << "pi:     " << pi(256) << endl;
         cout << "better: " << better_pi(INT8_MAX) << endl;
         cout << "        " << better_pi(INT16_MAX) << endl;
         cout << "        " << better_pi(INT32_MAX) << endl;
