@@ -1,9 +1,11 @@
-#include "1_wurzeln_und_prim/root_and_primes.cpp"
+#include "algorithms.cpp"
 
 using namespace std;
 
 int main()
 {
+    // serie 1 - root & primes
+
     if(false)
     {
         int a, n;
@@ -25,6 +27,13 @@ int main()
         {
             if(numbers[i]) cout << numbers[i] << endl;
         }
+    }
+
+    // serie 2 - pi & karazuba
+
+    if(true)
+    {
+
     }
 
     return 0;

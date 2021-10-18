@@ -1,5 +1,7 @@
 #include <iostream>
 
+// serie 1 - root & primes
+
 static int nth_root(int n, double a)
 {
     int oldx = 10;
@@ -30,3 +32,6 @@ static int* primes_to_n(int n)
 
     return numbers;
 }
+
+// serie 2 - pi & karazuba
+
