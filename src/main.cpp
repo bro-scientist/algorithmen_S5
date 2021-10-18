@@ -15,7 +15,7 @@ int main()
         cin >> n;
         cout << endl << n << ". Wurzel von " << a << " ist: " << nth_root(n, a) << endl;
     }
-    if (true)
+    if (false)
     {
         int n;
         cout << "primes to:";
@@ -33,7 +33,10 @@ int main()
 
     if(true)
     {
-
+        cout << "pi:     " << pi(1024) << endl;
+        cout << "better: " << better_pi(INT8_MAX) << endl;
+        cout << "        " << better_pi(INT16_MAX) << endl;
+        cout << "        " << better_pi(INT32_MAX) << endl;
     }
 
     return 0;

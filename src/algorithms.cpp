@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 
 // serie 1 - root & primes
 
@@ -35,3 +36,28 @@ static int* primes_to_n(int n)
 
 // serie 2 - pi & karazuba
 
+static float pi (int edges)
+{
+    float sn = 2.0;
+
+    unsigned n = 1;
+    while(n < edges)
+    {
+        sn = sqrt(2-2*sqrt(1-(pow(sn,2)/4)));
+        n <<= 1; // bit shift multiplication
+    }
+    return sn*n;
+}
+
+static float better_pi (int edges)
+{
+    float sn = 2.0;
+
+    unsigned n = 1;
+    while(n < edges)
+    {
+        sn = sqrt(pow(sn,2)/(2+2*sqrt(1-pow(sn,2)/4)));
+        n <<= 1; // bit shift multiplication
+    }
+    return sn*n;
+}
