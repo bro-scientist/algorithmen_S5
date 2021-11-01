@@ -59,11 +59,18 @@ int main()
 
     // serie 3 - differentiation & integral
 
-#if true
+#if false
+    cout << "differentiate: 8" << endl;
+    cout << "differentiate: " << differentiate(&func_to_integrate, 4, 0.01f) << endl;
+    cout << "differentiate2: 2" << endl;
+    cout << "differentiate2: " << differentiate2(&func_to_integrate, 400, 1.0f) << endl;
+#endif
+
+#if false
     float a = 15.0f, b = 47.0f;
     float deltaX = 0.8f, intervals = 8;
 
-    float trapez = integrate_by_trapez(&func_to_integrate, a, b, deltaX);
+    float trapez = integrate_by_trapezoid(&func_to_integrate, a, b, deltaX);
     float shorter = integrate_shorter(&func_to_integrate, a, b, deltaX);
     float simpson = integrate_simpson(&func_to_integrate, a, b, intervals);
 
@@ -74,6 +81,29 @@ int main()
     assert (round(trapez) == round(shorter));
 #endif
 
+    // serie 4 - regression & dings
+
+    float temperatures[] = {
+            1905, 7.7F,
+            1915, 8.0F,
+            1925, 7.9F,
+            1935, 8.1F,
+            1945, 8.3F,
+            1955, 8.1F,
+            1965, 7.9F,
+            1975, 8.3F,
+            1985, 8.5F,
+            1995, 9.0F,
+            2005, 9.2F
+    };
+
+#if true
+    cout << "regression_get: ~y = -15.365 + 0.012x" << endl;
+    regression_pair pair = regression_get(temperatures, 11);
+    cout << "regression_get: ~y = " << pair.a << " + " << pair.b << "x" << endl;
+    cout << "regression_predict: 2010: 8.9" << endl;
+    cout << "regression_predict: 2010: " << regression_predict(temperatures, 11, 2010) << endl;
+#endif
 
     return 0;
 }

@@ -152,7 +152,18 @@ long long multiply(long long x, long long y)
 
 // serie 3 - differentiation & integral
 
-float integrate_by_trapez(float (*func)(float), float a, float b, float deltaX)
+float differentiate(float (*func)(float), float x, float h)
+{
+    // return (func(x + h) - func(x)) / h;
+    return (func(x + h) - func(x - h)) / (h * 2);
+}
+
+float differentiate2(float (*func)(float), float x, float h)
+{
+    return (func(x + h) + func(x - h) - 2 * func(x)) / pow(h, 2);
+}
+
+float integrate_by_trapezoid(float (*func)(float), float a, float b, float deltaX)
 {
     float stripes = (b - a) / deltaX;
     float sum = 0;
@@ -192,4 +203,36 @@ float integrate_simpson(float (*func)(float), float a, float b, int intervals)
         a += deltaX;
     }
     return sum * deltaX / 3;
+}
+
+// serie 4 - regression & dings
+
+struct regression_pair
+{
+    double a,b;
+};
+
+regression_pair regression_get(float values[], int length)
+{
+    double x_ = 0, y_ = 0, a , b, sum_xi_yi = 0, sum_xi_sq = 0;
+
+    for (int i = 0; i < length; i++)
+    {
+        x_ += values[i << 1];
+        y_ += values[(i << 1) + 1];
+        sum_xi_yi += values[i << 1] * values[(i << 1) + 1];
+        sum_xi_sq += pow(values[i << 1], 2);
+    }
+
+    x_ /= length;
+    y_ /= length;
+    b = (sum_xi_yi - length * x_ * y_) / (sum_xi_sq - length * pow(x_, 2));
+    a = y_ - b * x_;
+
+    return {a,b};
+}
+
+float regression_predict(float values[], int length, float x) {
+    regression_pair params = regression_get(values, length);
+    return params.a + params.b * x;
 }
