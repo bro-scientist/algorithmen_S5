@@ -236,3 +236,61 @@ float regression_predict(float values[], int length, float x) {
     regression_pair params = regression_get(values, length);
     return params.a + params.b * x;
 }
+
+// serie 5 - dgl
+
+float euler_cauchy(float (*func)(float, float), float x, float y, float deltaX, float limit)
+{
+    limit /= deltaX;
+    for(int i = 0; i < limit; i++)
+    {
+        y = func(x, y) * deltaX + y;
+        x += deltaX;
+        // std::cout << i << ": " << "|" << y << std::endl;
+    }
+    return y;
+}
+
+float euler_better(float (*func)(float, float), float x, float y, float deltaX, float limit)
+{
+    limit /= deltaX;
+    for(int i = 0; i < limit; i++)
+    {
+        y = func(x + deltaX / 2, y + (deltaX * func(x, y)) / 2) * deltaX + y;
+        x += deltaX;
+        // std::cout << i << ": " << "|" << y << std::endl;
+    }
+    return y;
+}
+
+float runge_kutta_2nd_order(float (*func)(float, float), float x, float y, float s, float limit)
+{
+    float k1, k2;
+    limit /= s;
+    for(int i = 0; i < limit; i++)
+    {
+        k1 = func(x, y);
+        x += s;
+        k2 = func(x, y + s * k1);
+        y += (s * (k1 + k2) / 2);
+        // std::cout << i << ": " << "|" << y << std::endl;
+    }
+    return y;
+}
+
+float runge_kutta_4th_order(float (*func)(float, float), float x, float y, float s, float limit)
+{
+    float k1, k2, k3, k4;
+    limit /= s;
+    for(int i = 0; i < limit; i++)
+    {
+        k1 = func(x, y);
+        k2 = func(x + (s / 2), y + s * k1 / 2);
+        k3 = func(x + (s / 2), y + s * k2 / 2);
+        x += s;
+        k4 = func(x, y + s * k3);
+        y += (s * (k1 + 2 * k2 + 2 * k3 + k4) / 6);
+        // std::cout << i << ": " << "|" << y << std::endl;
+    }
+    return y;
+}

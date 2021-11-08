@@ -6,6 +6,10 @@ float func_to_integrate(float x) {
     return pow(x, 2);
 }
 
+float func_to_dgl(float x, float y) {
+    return 2 * x * y;
+}
+
 int main()
 {
     // serie 1 - root & primes
@@ -97,12 +101,22 @@ int main()
             2005, 9.2F
     };
 
-#if true
+#if false
     cout << "regression_get: ~y = -15.365 + 0.012x" << endl;
     regression_pair pair = regression_get(temperatures, 11);
     cout << "regression_get: ~y = " << pair.a << " + " << pair.b << "x" << endl;
     cout << "regression_predict: 2010: 8.9" << endl;
     cout << "regression_predict: 2010: " << regression_predict(temperatures, 11, 2010) << endl;
+#endif
+
+    // serie 5 - dgl
+
+#if true
+    float x = 0.0F, y = 1.0F, deltaX = 0.001F, limit = 4.0F;
+    cout << "         euler_cauchy: " << euler_cauchy(func_to_dgl, x, y, deltaX, limit) << endl;
+    cout << "         euler_better: " << euler_better(func_to_dgl, x, y, deltaX, limit) << endl;
+    cout << "runge_kutta_2nd_order: " << runge_kutta_2nd_order(func_to_dgl, x, y, deltaX, limit) << endl;
+    cout << "runge_kutta_4th_order: " << runge_kutta_4th_order(func_to_dgl, x, y, deltaX, limit) << endl;
 #endif
 
     return 0;
