@@ -289,8 +289,174 @@ float runge_kutta_4th_order(float (*func)(float, float), float x, float y, float
         k3 = func(x + (s / 2), y + s * k2 / 2);
         x += s;
         k4 = func(x, y + s * k3);
-        y += (s * (k1 + 2 * k2 + 2 * k3 + k4) / 6);
-        // std::cout << i << ": " << "|" << y << std::endl;
+        y += s * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+        // std::cout << i << ": " << x << "|" << y << std::endl;
     }
     return y;
 }
+
+// serie 6.1 - lgs
+
+void print_arr(int* arr, int size)
+{
+    for (int x = 0; x < size; x++)
+    {
+        for (int y = 0; y < size; y++)
+        {
+            cout << " " << arr[x * size + y];
+        }
+        cout <<  endl;
+    }
+    cout <<  endl;
+}
+
+void lr_zerlegung(int* input, int* b, int size)
+{
+    // x = v  ;  y = ->
+
+    int* left;
+    left = new int[size * size];
+
+    for (int x = 0; x < size; x++)
+    {
+        for (int y = 0; y < size; y++)
+        {
+            left[x * size + y] = x == y;
+        }
+    }
+
+    for (int i = 0; i < size - 1; i++)
+    {
+        for (int x = i + 1; x < size; x++)
+        {
+            left[x * size + i] = input[x * size + i] / input[i * size + i];
+            for (int y = 0; y < size; y++)
+            {
+                input[x * size + y] -= left[x * size + i] * input[i * size + y];
+            }
+        }
+    }
+
+    cout << "left:" << endl;
+    print_arr(left, size);
+
+    cout << "right:" << endl;
+    print_arr(input, size);
+
+    cout << "result:" << endl;
+    int* y = new int[size];
+
+    y[0] = b[0];
+    y[1] = b[1] - left[1 * size + 0] * y[0];
+    y[2] = b[2] - left[2 * size + 0] * y[0] - left[2 * size + 1] * y[1];
+    // TODO
+
+    for (int x = 0; x < size; x++)
+    {
+        cout << y[x] << endl;
+    }
+}
+
+void pivotize_rows(int* input, int* b, int size)
+{
+    // x = ->  ;  y = v
+
+    for (int x = 0; x < size; x++)
+    {
+        int temp = INT32_MIN, row = 0;
+        for (int y = x; y < size; y++)
+        {
+            if (input[y * size + x] > temp)
+            {
+                temp = input[y * size + x];
+                row = y;
+            }
+        }
+
+        temp = b[x];
+        b[x] = b[row];
+        b[row] = temp;
+
+        for (int xx = 0; xx < size; xx++)
+        {
+            temp = input[x * size + xx];
+            input[x * size + xx] = input[row * size + xx];
+            input[row * size + xx] = temp;
+        }
+    }
+}
+
+void pivotize_cols(int* input, int size)
+{
+    // x = ->  ;  y = v
+
+    for (int y = 0; y < size; y++)
+    {
+        int temp = INT32_MIN, col = 0;
+        for (int x = y; x < size; x++)
+        {
+            if (input[y * size + x] > temp)
+            {
+                temp = input[y * size + x];
+                col = x;
+            }
+        }
+
+        for (int yy = 0; yy < size; yy++)
+        {
+            temp = input[yy * size + y];
+            input[yy * size + y] = input[yy * size + col];
+            input[yy * size + col] = temp;
+        }
+    }
+}
+
+// serie 6.2 - lgs 2
+
+void jacobi_or_gau3seidel_lgs(int* input, int* b, int size, double epsilon, double* x, double* x_old, bool overwrite)
+{
+    double error;
+
+    int iter = 0;
+    do
+    {
+        error = 0;
+        cout << ++iter << ". interation ";
+        for (int i = 0; i < size; i++)
+        {
+            double sum = 0;
+            for (int j = 0; j < size; j++)
+            {
+                if (i != j) sum += input[i * size + j] * (overwrite ? x[j] : x_old[j]);
+            }
+            x[i] = (b[i] - sum) / input[i * size + i];
+            cout << "x" << i << ": " << x[i] << ", ";
+        }
+        cout << endl;
+
+        for (int k = 0; k < size; k++)
+        {
+            error += abs(x_old[k] - x[k]);
+            x_old[k] = x[k];
+        }
+    }
+    while (error > epsilon);
+
+    cout << endl << "result: " << endl;
+    for (int r = 0; r < size; r++)
+    {
+        cout << "x" << r << ": " << round(x[r]) << ", " << endl;
+    }
+}
+
+void jacobi_lgs(int* input, int* b, int size, double epsilon, double* x, double* x_old)
+{
+    jacobi_or_gau3seidel_lgs(input, b, size, epsilon, x, x_old, false);
+}
+
+void gau3seidel_lgs(int* input, int* b, int size, double epsilon, double* x, double* x_old)
+{
+    jacobi_or_gau3seidel_lgs(input, b, size, epsilon, x, x_old, true);
+}
+
+// serie 6.3

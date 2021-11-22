@@ -111,12 +111,60 @@ int main()
 
     // serie 5 - dgl
 
-#if true
-    float x = 0.0F, y = 1.0F, deltaX = 0.001F, limit = 4.0F;
+#if false
+    float x = 4.0F, y = 1.0F, deltaX = 0.01, limit = 4.0F;
     cout << "         euler_cauchy: " << euler_cauchy(func_to_dgl, x, y, deltaX, limit) << endl;
     cout << "         euler_better: " << euler_better(func_to_dgl, x, y, deltaX, limit) << endl;
     cout << "runge_kutta_2nd_order: " << runge_kutta_2nd_order(func_to_dgl, x, y, deltaX, limit) << endl;
     cout << "runge_kutta_4th_order: " << runge_kutta_4th_order(func_to_dgl, x, y, deltaX, limit) << endl;
+#endif
+
+    // serie 6.1 - lgs
+
+    const int size0 = 3;
+    int input0[size0 * size0] = {
+            3, 2, 1,
+            6, 6, 3,
+            9,10, 6
+    };
+    int b0[size0] = {2, 3, 5};
+
+    const int size1 = 5;
+    int input1[size1 * size1] = {
+            4, 0, 3, 2, 7,
+            8, 2, 9, 2, 1,
+            1, 3, 4, 1, 3,
+            2, 2, 4, 6, 8,
+            6, 8, 8, 5, 0
+    };
+    int b1[size1] = {3, 1, 3, 7, 4};
+
+#if false
+    cout << "lr_zerlegung: " << endl;
+    // pivotize_rows(input0, b0, size0);
+    lr_zerlegung(input0, b0, size0);
+
+    // pivotize_rows(input1, b1, size1);
+    lr_zerlegung(input1, b1, size1);
+#endif
+
+    // serie 6.2 - lgs 2
+
+    const int size2 = 3;
+    int input2[size2 * size2] = {
+            3, 1, 0,
+            1, 3, 1,
+            0, 1, 3
+    };
+    int b2[size2] = {1, 5, 7};
+    double x[size2] = {0}, x_old[size2] = {0};
+
+#if false
+    jacobi_lgs(input2, b2, size2, 0.01, x, x_old);
+#endif
+
+#if false
+    gau3seidel_lgs(input2, b2, size2, 0.01, x, x_old);
 #endif
 
     return 0;
