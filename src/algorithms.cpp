@@ -1,6 +1,12 @@
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
+#include <vector>
+#include <set>
+
+#define INFINITY INT32_MAX
 
 using namespace std;
 
@@ -69,7 +75,7 @@ static float pi(int edges)
     while (n < edges)
     {
         sn = sqrt(2-2*sqrt(1-(pow(sn,2)/4)));
-        n <<= 1; // bit shift multiplication
+        n *= 2;
     }
     return sn*n;
 }
@@ -82,7 +88,7 @@ static float better_pi(int edges)
     while (n < edges)
     {
         sn = sqrt(pow(sn,2)/(2+2*sqrt(1-pow(sn,2)/4)));
-        n <<= 1; // bit shift multiplication
+        n *= 2;
     }
     return sn*n;
 }
@@ -297,17 +303,40 @@ float runge_kutta_4th_order(float (*func)(float, float), float x, float y, float
 
 // serie 6.1 - lgs
 
-void print_arr(int* arr, int size)
+void print_arr_2d_char_offset(int* arr, int sizeX, int sizeY, int offset)
 {
-    for (int x = 0; x < size; x++)
+    for (int x = 0; x < sizeX; x++)
     {
-        for (int y = 0; y < size; y++)
+        for (int y = 0; y < sizeY; y++)
         {
-            cout << " " << arr[x * size + y];
+            int value = arr[x * sizeX + y];
+            cout << (value != -1 ? (char)(value + offset) : '#') << "|";
         }
+        // move cursor back and replace last char with space
+        cout << '\b' << ' ';
+        cout << endl;
+    }
+}
+
+void print_arr_2d(int* arr, int sizeX, int sizeY)
+{
+    for (int x = 0; x < sizeX; x++)
+    {
+        for (int y = 0; y < sizeY; y++)
+        {
+            int value = arr[x * sizeX + y];
+            if (value < INFINITY) cout << value << '|';
+            else cout << '\236' << '|';
+        }
+        // move cursor back and replace last char with space
+        cout << '\b' << ' ';
         cout <<  endl;
     }
-    cout <<  endl;
+}
+
+void print_arr_2d(int* arr, int size)
+{
+    print_arr_2d(arr, size, size);
 }
 
 void lr_zerlegung(int* input, int* b, int size)
@@ -338,10 +367,10 @@ void lr_zerlegung(int* input, int* b, int size)
     }
 
     cout << "left:" << endl;
-    print_arr(left, size);
+    print_arr_2d(left, size);
 
     cout << "right:" << endl;
-    print_arr(input, size);
+    print_arr_2d(input, size);
 
     cout << "result:" << endl;
     int* y = new int[size];
@@ -459,4 +488,326 @@ void gau3seidel_lgs(int* input, int* b, int size, double epsilon, double* x, dou
     jacobi_or_gau3seidel_lgs(input, b, size, epsilon, x, x_old, true);
 }
 
+void abstiegsverfahren_dumm(float func(float, float), float step, float d0(float), float d1(float))
+{
+    int dim = 2;
+    float diff = 1, epsilon = 0.01;
+    float x_last[2], x[2] = {1, 1};
+
+    while (diff > epsilon)
+    {
+        /*
+        for (int i = 0; i < dim; i++)
+        {
+            x_last[i] = x[i];
+            x[i] = x_last[i] + step *
+        }
+        */
+
+        x_last[0] = x[0];
+        x_last[1] = x[1];
+
+        x[0] = x_last[0] + step * d0(x[0]);
+        x[1] = x_last[1] + step * d1(x[1]);
+
+        std::cout << "x: (" << x[0] << " , " << x[1] << ") " << std::endl;
+
+        diff = abs(func(x_last[0], x_last[1]) - func(x[0], x[1]));
+        std::cout << diff << std::endl;
+    }
+}
+
+
+void abstiegsverfahren(float func(float[]), float step, float (*d[])(float), int dimensions, float x_start[], float x_last[])
+{
+    float diff = 1, epsilon = 0.01;
+
+    while (diff > epsilon)
+    {
+        std::cout << "x: (";
+        for (int i = 0; i < dimensions; i++)
+        {
+            x_last[i] = x_start[i];
+            x_start[i] = x_last[i] + step * d[i](x_start[i]);
+            std::cout << x_start[i] << ",";
+        }
+
+        diff = abs(func(x_last) - func(x_start));
+        // delete last comma
+        std::cout << "\x08) diff: " << diff << std::endl;
+    }
+}
+
 // serie 6.3
+
+
+
+
+
+// serie 10
+
+int simulated_annealing(double epsilon, double t, int size, int A[], int queue[], int best[])
+{
+    double delta;
+    int shortest = INFINITY;
+
+    srand(time(nullptr));
+
+    while (t > epsilon) {
+
+        // calculate length of current queue
+        int length = 0;
+        for (int i = 0; i < size; i++)
+        {
+            length += A[queue[i] * size + queue[i + 1]];
+        }
+        delta = abs(length - shortest);
+
+        // keep new queue as best if round-trip is shorter OR random value is smaller than p
+        if (length < shortest || (double)(rand() % 1000) / 1000 < exp(-(delta/t)))
+        {
+            shortest = length;
+            for (int i = 0; i < size+1; i++) best[i] = queue[i];
+
+            cout << "new best: ";
+            for (int i = 0; i < size+1; i++)
+            {
+                cout << best[i];
+            }
+            cout << " - " << shortest << endl;
+        }
+
+        // reverse part of the current queue
+        int from = rand() % 6, to = rand() % 6;
+        while(from >= to) from = rand() % 6, to = rand() % 6;
+        while (from < to)
+        {
+            int mem = queue[from];
+            queue[from++] = queue[to];
+            queue[to--] = mem;
+        }
+
+        // match beginning and ending of euler-round-trip
+        queue[6] = queue[0];
+
+        // "cool down"
+        t /= 2;
+    }
+
+    // output final result and return
+    cout << "best:     ";
+    for (int i = 0; i < size+1; i++)
+    {
+        cout << best[i];
+    }
+    cout << " - " << shortest << endl;
+
+    return shortest;
+}
+
+// serie 11
+
+// TODO: visualizeMST();
+void prim_MST(int A[], const int size)
+{
+    int mstLength = 0;
+    vector<int> nodesInMst = *new vector<int>();
+
+    nodesInMst.push_back(0);
+    while (nodesInMst.size() < size) // can be a for loop with size-1 iterations
+    {
+        int smallestValue = INFINITY, from, to;
+        for (int node : nodesInMst)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                if (std::find(nodesInMst.begin(), nodesInMst.end(), i) != nodesInMst.end()) continue;
+                int currentValue = A[size * node + i];
+                if (currentValue < smallestValue)
+                {
+                    smallestValue = currentValue;
+                    from = node;
+                    to = i;
+                }
+            }
+        }
+        nodesInMst.push_back(to);
+        mstLength += smallestValue;
+        cout << endl << "link: " << (char)(from + 65) << "->" << (char)(to + 65) << "  | nodesInMst:";
+        for (int node : nodesInMst)
+        {
+            cout << " " << (char)(node + 65);
+        }
+    }
+    cout << endl << "length: " << mstLength;
+}
+
+void dijkstra(int A[], const int size, int startNode, int distances[], int predecessors[], const int maxVal)
+{
+    int char_offset = 65;
+    int v = 0, w;
+    set<int> B = {};
+
+    // initKW
+    for (int i = 0; i < size; i++)
+    {
+        distances[i] = maxVal;
+        predecessors[i] = -1;
+    }
+    distances[startNode] = 0;
+
+    B.insert(startNode);
+
+    while (!B.empty())
+    {
+        cout << "Distanzen:   ";
+        print_arr_2d(distances, 1, size);
+        cout << "Vorgaenger:  ";
+        print_arr_2d_char_offset(predecessors, 1, size, char_offset);
+
+        cout << "B: ";
+        int dist = maxVal;
+        for (int value : B)
+        {
+            cout << (char)(value + char_offset) << ',';
+            if (dist > distances[value])
+            {
+                v = value;
+                dist = distances[value];
+            }
+        }
+        B.erase(v);
+        cout << '\b' << ' ';
+        cout << endl << "min: " << (char)(v + char_offset) << endl<< "________________________________________" << endl;
+
+        for (w = 0; w < size; w++)
+        {
+            if (A[v * size + w] < maxVal)
+            {
+                if (distances[w] == maxVal)
+                    B.insert(w);
+
+                // verkuerze
+                int newDist = distances[v] + A[v * size + w];
+                if (newDist < distances[w])
+                {
+                    distances[w] = newDist;
+                    predecessors[w] = v;
+                }
+            }
+        }
+    }
+    cout << "Distanzen:   ";
+    print_arr_2d(distances, 1, size);
+    cout << "Vorgaenger:  ";
+    print_arr_2d_char_offset(predecessors, 1, size, char_offset);
+}
+
+// serie 12
+
+int getSteps(char c, char* steps, unsigned const int length)
+{
+    if (!c) return 0;
+    for (int i = 0; i < length; i++)
+    {
+        if (steps[i] == c)
+        {
+            // cout << "found:" << c << " at " << i << endl;
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+unsigned int findText_broyer_moore_horspool(char* text, unsigned const int textLength, char* pattern, unsigned const int patternLength, char* steps)
+{
+    // run through pattern to initialize steps for char occurrences
+    for (int i = patternLength-2; i >= 0; i--) {
+        int found = getSteps(pattern[i], steps, patternLength);
+        if (!found) steps[patternLength-2-i] = pattern[i];
+    }
+    if (!getSteps(pattern[patternLength-1], steps, patternLength))
+        steps[patternLength-1] = pattern[patternLength-1];
+
+    for (int k = 0; k < patternLength; k++)
+        cout << (steps[k] ? steps[k] : '-') << " ";
+
+    cout << endl << pattern << endl;
+
+    unsigned int textPos = patternLength-1;
+    while (textPos < textLength)
+    {
+        for (int diff = 0; diff < patternLength; diff++)
+        {
+            unsigned int tempPatternPos = patternLength-1-diff, tempTextPos = textPos-diff;
+            if (pattern[tempPatternPos] != text[tempTextPos])
+            {
+                // go forward n steps (if zero is returned, the distance is actually 6)
+                unsigned int moveBy = getSteps(text[textPos], steps, patternLength);
+                moveBy = moveBy ? moveBy : 6;
+                textPos += moveBy;
+                break;
+            }
+            else if (!tempPatternPos)
+                return tempTextPos;
+        }
+    }
+    return 0;
+}
+
+// serie 14
+
+int det(int x1, int y1, int x2, int y2)
+{
+    int result = x1*y2 - x2*y1;
+    return !result ? 0 : result > 0 ? 1 : -1;
+}
+
+int det(int* points, int p, int q, int i)
+{
+    return det(points[q+0]-points[p+0], points[q+1]-points[p+1], points[i+0]-points[p+0], points[i+1]-points[p+1]);
+}
+
+vector<int> jarvis_march_convex_hull(int* points, int size)
+{
+    const int x = 0;
+    const int y = 1;
+
+    // output
+    vector<int> convexHull = *new vector<int>;
+
+    // point indices
+    int l = 0, p = 0, q = 0;
+
+    // compare y value of each point to find bottom left
+    for (int i = 2; i < size*2; i+=2)
+        if (points[i+y] < points[l+y] || points[i+y] == points[l+y] && points[i+x] < points[l+x])
+            l = i;
+
+    p = l;
+    convexHull.push_back(p);
+    cout << p/2 << " added." << endl;
+    do
+    {
+        q = p+2;
+        for (int i = 0; i < size*2; i+=2)
+        {
+            // only use when there are a lot of points
+            // if (std::find(convexHull.begin(), convexHull.end(), i) != convexHull.end()) continue;
+            if (q == i || p == i) continue;
+
+            cout << " det: " << p/2 << "->" << q/2 << "  " << p/2 << "->" << i/2 << " = " << det(points, p, q, i) << endl;
+            int determinant = det(points, p, q, i);
+
+            // check if vector p->i is right from p->q or they have the same direction but p->i is longer
+            if (determinant < 0 || !determinant && points[q+x]-points[p+x] < points[i+x]-points[p+x])
+                q = i;
+        }
+        convexHull.push_back(q);
+        p = q;
+        cout << q/2 << " added." << endl;
+    }
+    while (p != l);
+
+    return convexHull;
+}
